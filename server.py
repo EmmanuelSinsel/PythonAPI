@@ -7,6 +7,10 @@ from inspect import signature
 from multiprocessing.sharedctypes import Value
 import asyncio
 import time
+import sys
+
+
+
 
 class Http_status:
     def http_200(self):
@@ -54,6 +58,7 @@ class Router:
     put_methods = {}
     delete_methods = {}
     patch_methods = {}
+    page_urls = {}
 
     def add_get(self, function, url: str):
         self.get_methods[url] = function
@@ -70,23 +75,31 @@ class Router:
     def add_patch(self, function, url: str):
         self.patch_methods[url] = function
 
+    def add_page(self, url: str, file: str):
+        self.page_urls[url] = file
+
     def add_router(self, router):
         self.get_methods.update(router.get_methods)
         self.post_methods.update(router.post_methods)
         self.put_methods.update(router.put_methods)
         self.delete_methods.update(router.delete_methods)
         self.patch_methods.update(router.patch_methods)
+        self.page_urls.update(router.page_urls)
 
 
 class Server():
-    sel = selectors.DefaultSelector()
-    router = Router()
-    status_codes = Http_status()
-
+    __DOCS_URL = "docs"
     __METHODS: object
     __HOST = ""
     __PORT = 0
     __CHUNK_SIZE = 1024
+
+    sel = selectors.DefaultSelector()
+    router = Router()
+
+    router.add_page(__DOCS_URL,__DOCS_URL+".html")
+
+    status_codes = Http_status()
 
     MAX_REQUEST_SIZE = 0.25
 
@@ -103,6 +116,25 @@ class Server():
         body_raw = json.dumps(body)
         headers = {
             'Content-type': 'application/json; charset=UTF-8',
+            'content-length': len(body_raw),
+            'connection': 'close',
+        }
+        headers_raw = ''.join('%s: %s\n' % (k, v) for k, v in headers.items())
+        response_proto = b'HTTP/1.1'
+        response_status = status[0]
+        response_status_text = status[1]
+        s.send(b'%s %s %s' % (response_proto, response_status, response_status_text))
+        s.send(b'\n')
+        s.send(bytes(headers_raw, 'utf-8'))
+        s.send(b'\n')
+        s.send(bytes(body_raw, 'utf-8'))
+
+    def senderHtml(self, s: socket, body: str, status: []):
+        body = body.replace('\n','')
+        body = body.replace('"','')
+        body_raw = json.dumps(body)
+        headers = {
+            'Content-type': 'text/html;',
             'content-length': len(body_raw),
             'connection': 'close',
         }
@@ -148,91 +180,106 @@ class Server():
             bytes_recd = 0                           # CONTADOR DE LOS BYTES RECIBIDOS
             msg_len = 0
             chunk = sock.recv(1024)
-            if str(chunk)[0] in self.no_ssl:
-                print("NO SSL")
-                chunks.append(chunk)
-                msg_len = self.get_msg_len(chunk)
-                if msg_len != None:
-                    msg_len = int(msg_len)
-                    if len(chunk)==1024:
-                        while bytes_recd < msg_len:
-                            chunk = sock.recv(min(msg_len - bytes_recd, self.__CHUNK_SIZE))  # LEE UN TROZO DE 2048 BYTES DEL MENSAJE
-                            if not chunk:
-                                raise RuntimeError("ERROR")
-                            chunks.append(chunk)             # GUARDA EL TROZO EN LA LISTA CHUNKS
-                            bytes_recd += len(chunk)         # SUMA LOS BYTES RECIBIDOS
-                            if len(chunk)<self.__CHUNK_SIZE and msg_len - bytes_recd < self.__CHUNK_SIZE:
-                                break
-                recv_data = b"".join(chunks)         # SUMA TODOS LOS TROZOS EN UNA CADENA DE BYTES
+            chunks.append(chunk)
+            msg_len = self.get_msg_len(chunk)
+            if msg_len != None:
+                msg_len = int(msg_len)
+                if len(chunk)==1024:
+                    while bytes_recd < msg_len:
+                        chunk = sock.recv(min(msg_len - bytes_recd, self.__CHUNK_SIZE))  # LEE UN TROZO DE 2048 BYTES DEL MENSAJE
+                        if not chunk:
+                            raise RuntimeError("ERROR")
+                        chunks.append(chunk)             # GUARDA EL TROZO EN LA LISTA CHUNKS
+                        bytes_recd += len(chunk)         # SUMA LOS BYTES RECIBIDOS
+                        if len(chunk)<self.__CHUNK_SIZE and msg_len - bytes_recd < self.__CHUNK_SIZE:
+                            break
+            recv_data = b"".join(chunks)         # SUMA TODOS LOS TROZOS EN UNA CADENA DE BYTES
 
-                if not msg_len == None:
-                    if int(msg_len) > (self.MAX_REQUEST_SIZE*pow(1024,2)):
-                        body = {"Message":"Content Too Large",
-                                "Content-Lenght":msg_len,
-                                "Max-Content-Lenght":(MAX_REQUEST_SIZE*pow(1024,2))
-                                }
-                        self.sender(sock, body, self.status_codes.http_413())
-                        self.sel.unregister(sock)
-                        sock.close()
-                        return
-                #A PARTIR DE AQUI SI JALA
-                str_recv_data = str(recv_data, 'UTF8')
-                raw = str_recv_data.split("\r\n\r\n")
-                if (str_recv_data != ''):
-                    rtype, params = self.request_constructor(data_dict['addr'][1], raw)
-                    if params != None:
-                        suburl = self.get_url(params)
+            if not msg_len == None:
+                if int(msg_len) > (self.MAX_REQUEST_SIZE*pow(1024,2)):
+                    body = {"Message":"Content Too Large",
+                            "Content-Lenght":msg_len,
+                            "Max-Content-Lenght":(MAX_REQUEST_SIZE*pow(1024,2))
+                            }
+                    self.sender(sock, body, self.status_codes.http_413())
+                    self.sel.unregister(sock)
+                    sock.close()
+                    return
+            #A PARTIR DE AQUI SI JALA
+            str_recv_data = str(recv_data, 'UTF8')
+            raw = str_recv_data.split("\r\n\r\n")
+            print(raw)
+            if (str_recv_data != ''):
+                rtype, params = self.request_constructor(data_dict['addr'][1], raw)
+                if params != None:
+                    suburl = self.get_url(params)
+                    if len(suburl) > 1:
                         run, status = self.handle_request(rtype, suburl, params)
                         print(rtype,"REQUEST ACCEPED FROM",data_dict['addr'],"- STATUS:",status[0].decode("utf-8"),status[1].decode("utf-8"))
                         self.sender(sock, run, status)
-                        self.sel.unregister(sock)
-                        sock.close()
-                        return
-                if recv_data:
-                    data.outb += recv_data
-            else:
-                print("SSL")
+                    else:
+                        print(self.__METHODS.page_urls)
+                        if suburl[0] in self.__METHODS.page_urls:
+                            url = self.__METHODS.page_urls[suburl[0]]
+                            content = open(url).read()
+                            self.senderHtml(sock, content , self.status_codes.http_201())
+                        else:
+                            self.senderHtml(sock, 'no-content', self.status_codes.http_404())
+                    self.sel.unregister(sock)
+                    sock.close()
+                    return
+            if recv_data:
+                data.outb += recv_data
+
+    def handle_request_html(self, suburl):
+        return self.__METHODS.page_urls[suburl], self.status_codes.http_201()
 
     # MANEJA LA LLAMADA A EL METODO ESPECIFICADO EN LA URL Y SU ESTATUS
     def handle_request(self, rtype, suburl, params):
         run = None
         status = None
-        if rtype == "GET":
-            args = self.url_paramters(suburl[1], self.__METHODS.get_methods[suburl[0]])
-            run, status = self.__METHODS.get_methods[suburl[0]](**args)
-            if run == None:
-                return None, self.status_codes.http_404()
-            return run, status
-        if rtype == "POST":
-            params[1] = params[1].replace("\n", '')
-            request = json.loads(params[1])
-            run, status = self.__METHODS.post_methods[suburl[0]](request)
-            if run == None:
-                return None, self.status_codes.http_404()
-            return run, status
-        if rtype == "PUT":
-            args = self.url_paramters(suburl[1], i[0], params[1])
-            run, status = self.__METHODS.put_methods[suburl[0]](**args)
+        print(suburl)
 
-            if run == None:
-                return None, self.status_codes.http_404()
-            return run, status
-        if rtype == "DELETE":
-            params = self.url_paramters(suburl[1], i[0])
-            run, status = self.__METHODS.delete_methods[suburl[0]](**params)
-            if run == None:
-                return None, self.status_codes.http_404()
-            return run, status
-        if rtype == "HEAD":
-            pass
-        if rtype == "OPTIONS":
-            pass
-        if rtype == "PATCH":
-            args = self.url_paramters(suburl[1], i[0], params[1])
-            run, status = self.__METHODS.patch_methods[suburl[0]](**args)
-            if run == None:
-                return None, self.status_codes.http_404()
-            return run, status
+        if suburl[0] == self.docs_url:
+            return open("docs.html").read(), self.status_codes.http_201(), 0
+        if len(suburl) > 1:
+            if rtype == "GET":
+                args = self.url_paramters(suburl[1], self.__METHODS.get_methods[suburl[0]])
+                run, status = self.__METHODS.get_methods[suburl[0]](**args)
+                if run == None:
+                    return None, self.status_codes.http_404()
+                return run, status
+            if rtype == "POST":
+                params[1] = params[1].replace("\n", '')
+                request = json.loads(params[1])
+                run, status = self.__METHODS.post_methods[suburl[0]](request)
+                if run == None:
+                    return None, self.status_codes.http_404()
+                return run, status
+            if rtype == "PUT":
+                args = self.url_paramters(suburl[1], i[0], params[1])
+                run, status = self.__METHODS.put_methods[suburl[0]](**args)
+                if run == None:
+                    return None, self.status_codes.http_404()
+                return run, status
+            if rtype == "DELETE":
+                params = self.url_paramters(suburl[1], i[0])
+                run, status = self.__METHODS.delete_methods[suburl[0]](**params)
+                if run == None:
+                    return None, self.status_codes.http_404()
+                return run, status
+            if rtype == "HEAD":
+                pass
+            if rtype == "OPTIONS":
+                pass
+            if rtype == "PATCH":
+                args = self.url_paramters(suburl[1], i[0], params[1])
+                run, status = self.__METHODS.patch_methods[suburl[0]](**args)
+                if run == None:
+                    return None, self.status_codes.http_404()
+                return run, status
+        else:
+            return 'not allowed', self.status_codes.http_404(), 1
 
     def url_paramters(self, params: str, function, request: str = ""):
         params = params.split("&")
