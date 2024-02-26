@@ -1,4 +1,5 @@
 import json
+import os.path
 import socket
 import selectors
 import threading
@@ -75,7 +76,7 @@ class Router:
     def add_patch(self, function, url: str):
         self.patch_methods[url] = function
 
-    def add_page(self, url: str, file: str):
+    def add_page(self, url, file):
         self.page_urls[url] = file
 
     def add_router(self, router):
@@ -86,7 +87,6 @@ class Router:
         self.patch_methods.update(router.patch_methods)
         self.page_urls.update(router.page_urls)
 
-
 class Server():
     __DOCS_URL = "docs"
     __METHODS: object
@@ -96,8 +96,6 @@ class Server():
 
     sel = selectors.DefaultSelector()
     router = Router()
-
-    router.add_page(__DOCS_URL,__DOCS_URL+".html")
 
     status_codes = Http_status()
 
@@ -129,24 +127,14 @@ class Server():
         s.send(b'\n')
         s.send(bytes(body_raw, 'utf-8'))
 
-    def senderHtml(self, s: socket, body: str, status: []):
-        body = body.replace('\n','')
-        body = body.replace('"','')
-        body_raw = json.dumps(body)
-        headers = {
-            'Content-type': 'text/html;',
-            'content-length': len(body_raw),
-            'connection': 'close',
-        }
-        headers_raw = ''.join('%s: %s\n' % (k, v) for k, v in headers.items())
+    def senderHtml(self, s: socket, body, status: []):
+
         response_proto = b'HTTP/1.1'
         response_status = status[0]
         response_status_text = status[1]
         s.send(b'%s %s %s' % (response_proto, response_status, response_status_text))
-        s.send(b'\n')
-        s.send(bytes(headers_raw, 'utf-8'))
-        s.send(b'\n')
-        s.send(bytes(body_raw, 'utf-8'))
+        s.send(b'\n\n')
+        s.send(bytes(body, 'utf-8'))
 
     # ACCEPTA LAS CONEXIONES A LOS SOCKETS
     def accept_wrapper(self, sock):
@@ -213,18 +201,21 @@ class Server():
                 rtype, params = self.request_constructor(data_dict['addr'][1], raw)
                 if params != None:
                     suburl = self.get_url(params)
+                    print(suburl)
                     if len(suburl) > 1:
                         run, status = self.handle_request(rtype, suburl, params)
                         print(rtype,"REQUEST ACCEPED FROM",data_dict['addr'],"- STATUS:",status[0].decode("utf-8"),status[1].decode("utf-8"))
                         self.sender(sock, run, status)
                     else:
-                        print(self.__METHODS.page_urls)
-                        if suburl[0] in self.__METHODS.page_urls:
-                            url = self.__METHODS.page_urls[suburl[0]]
-                            content = open(url).read()
+                        url = suburl[0]
+                        if os.path.isfile("htdocs/" + url):
+                            content = open("htdocs/" + url).read()
                             self.senderHtml(sock, content , self.status_codes.http_201())
+                        elif url in self.router.page_urls:
+                            content = open("htdocs/" + self.router.page_urls[url]).read()
+                            self.senderHtml(sock, content, self.status_codes.http_201())
                         else:
-                            self.senderHtml(sock, 'no-content', self.status_codes.http_404())
+                            self.senderHtml(sock, '', self.status_codes.http_404())
                     self.sel.unregister(sock)
                     sock.close()
                     return
