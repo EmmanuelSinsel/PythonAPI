@@ -9,8 +9,7 @@ from multiprocessing.sharedctypes import Value
 import asyncio
 import time
 import sys
-
-
+from swagger_ui_bundle import swagger_ui_path
 
 
 class Http_status:
@@ -54,6 +53,7 @@ class Http_status:
 
 
 class Router:
+    prefix = None
     get_methods = {}
     post_methods = {}
     put_methods = {}
@@ -61,22 +61,38 @@ class Router:
     patch_methods = {}
     page_urls = {}
 
+
+    def __init__(self, prefix=None):
+        self.prefix = prefix
+
     def add_get(self, function, url: str):
+        if self.prefix:
+            url = self.prefix+"/"+url
         self.get_methods[url] = function
 
     def add_post(self, function, url: str):
+        if self.prefix:
+            url = self.prefix+"/"+url
         self.post_methods[url] = function
 
     def add_put(self, function, url: str):
+        if self.prefix:
+            url = self.prefix+"/"+url
         self.put_methods[url] = function
 
     def add_delete(self, function, url: str):
+        if self.prefix:
+            url = self.prefix+"/"+url
         self.delete_methods[url] = function
 
     def add_patch(self, function, url: str):
+        if self.prefix:
+            url = self.prefix+"/"+url
         self.patch_methods[url] = function
 
     def add_page(self, url, file):
+        if self.prefix:
+            url = self.prefix+"/"+url
         self.page_urls[url] = file
 
     def add_router(self, router):
@@ -98,7 +114,10 @@ class Server():
     router = Router()
 
     status_codes = Http_status()
-
+    error_status = [
+        status_codes.http_404(),
+        status_codes.http_400()
+    ]
     MAX_REQUEST_SIZE = 0.25
 
     request_types = ["POST", "GET", "PATCH", "DELETE", "PUT", "OPTIONS", "HEAD"]
@@ -108,6 +127,9 @@ class Server():
         self.__HOST = HOST
         self.__PORT = PORT
 
+    def swagger(self):
+        spec_string = '{"openapi":"3.0.1","info":{"title":"python-swagger-ui test api","description":"python-swagger-ui test api","version":"1.0.0"},"servers":[{"url":"http://127.0.0.1:8989/api"}],"tags":[{"name":"default","description":"default tag"}],"paths":{"/hello/world":{"get":{"tags":["default"],"summary":"output hello world.","responses":{"200":{"description":"OK","content":{"application/text":{"schema":{"type":"object","example":"Hello World!!!"}}}}}}}},"components":{}}'
+        #api_doc(app, config_spec=spec_string, url_prefix='/api/doc', title='API doc')
 
     # SE ENCARGA DE ENVIAR LA RESPUESTA AL CLIENTE
     def sender(self, s: socket, body: str, status: []):
@@ -196,16 +218,17 @@ class Server():
             #A PARTIR DE AQUI SI JALA
             str_recv_data = str(recv_data, 'UTF8')
             raw = str_recv_data.split("\r\n\r\n")
-            print(raw)
             if (str_recv_data != ''):
                 rtype, params = self.request_constructor(data_dict['addr'][1], raw)
                 if params != None:
                     suburl = self.get_url(params)
-                    print(suburl)
-                    if len(suburl) > 1:
+                    if len(suburl[0]) > 1:
                         run, status = self.handle_request(rtype, suburl, params)
-                        print(rtype,"REQUEST ACCEPED FROM",data_dict['addr'],"- STATUS:",status[0].decode("utf-8"),status[1].decode("utf-8"))
-                        self.sender(sock, run, status)
+                        if status not in self.error_status:
+                            print(rtype,"REQUEST ACCEPED FROM",data_dict['addr'],"- STATUS:",status[0].decode("utf-8"),status[1].decode("utf-8"))
+                            self.sender(sock, run, status)
+                        else:
+                            print(rtype,"REQUEST FAILED FROM", data_dict['addr'],"- STATUS",status[0].decode("utf-8"),"ERROR -",run)
                     else:
                         url = suburl[0]
                         if os.path.isfile("htdocs/" + url):
@@ -229,48 +252,49 @@ class Server():
     def handle_request(self, rtype, suburl, params):
         run = None
         status = None
-        print(suburl)
-
-        if suburl[0] == self.docs_url:
-            return open("docs.html").read(), self.status_codes.http_201(), 0
-        if len(suburl) > 1:
-            if rtype == "GET":
-                args = self.url_paramters(suburl[1], self.__METHODS.get_methods[suburl[0]])
-                run, status = self.__METHODS.get_methods[suburl[0]](**args)
-                if run == None:
-                    return None, self.status_codes.http_404()
-                return run, status
-            if rtype == "POST":
-                params[1] = params[1].replace("\n", '')
-                request = json.loads(params[1])
-                run, status = self.__METHODS.post_methods[suburl[0]](request)
-                if run == None:
-                    return None, self.status_codes.http_404()
-                return run, status
-            if rtype == "PUT":
-                args = self.url_paramters(suburl[1], i[0], params[1])
-                run, status = self.__METHODS.put_methods[suburl[0]](**args)
-                if run == None:
-                    return None, self.status_codes.http_404()
-                return run, status
-            if rtype == "DELETE":
-                params = self.url_paramters(suburl[1], i[0])
-                run, status = self.__METHODS.delete_methods[suburl[0]](**params)
-                if run == None:
-                    return None, self.status_codes.http_404()
-                return run, status
-            if rtype == "HEAD":
-                pass
-            if rtype == "OPTIONS":
-                pass
-            if rtype == "PATCH":
-                args = self.url_paramters(suburl[1], i[0], params[1])
-                run, status = self.__METHODS.patch_methods[suburl[0]](**args)
-                if run == None:
-                    return None, self.status_codes.http_404()
-                return run, status
-        else:
-            return 'not allowed', self.status_codes.http_404(), 1
+        try:
+            if suburl[0] == self.__DOCS_URL:
+                return open("docs.html").read(), self.status_codes.http_201(), 0
+            if len(suburl[0]) > 1:
+                if rtype == "GET":
+                    args = self.url_paramters(suburl[1], self.__METHODS.get_methods[suburl[0]])
+                    run, status = self.__METHODS.get_methods[suburl[0]](**args)
+                    if run == None:
+                        return "Not found", self.status_codes.http_404()
+                    return run, status
+                if rtype == "POST":
+                    params[1] = params[1].replace("\n", '')
+                    request = json.loads(params[1])
+                    if suburl[0] not in self.__METHODS.post_methods:
+                        return "'"+suburl[0]+"' Not found", self.status_codes.http_404()
+                    run, status = self.__METHODS.post_methods[suburl[0]](request)
+                    return run, status
+                if rtype == "PUT":
+                    args = self.url_paramters(suburl[1], self.__METHODS.put_methods[suburl[0]], params[1])
+                    run, status = self.__METHODS.put_methods[suburl[0]](**args)
+                    if run == None:
+                        return "Not found", self.status_codes.http_404()
+                    return run, status
+                if rtype == "DELETE":
+                    params = self.url_paramters(suburl[1], self.__METHODS.delete_methods[suburl[0]])
+                    run, status = self.__METHODS.delete_methods[suburl[0]](**params)
+                    if run == None:
+                        return "Not found", self.status_codes.http_404()
+                    return run, status
+                if rtype == "HEAD":
+                    pass
+                if rtype == "OPTIONS":
+                    pass
+                if rtype == "PATCH":
+                    args = self.url_paramters(suburl[1], self.__METHODS.patch_methods[suburl[0]], params[1])
+                    run, status = self.__METHODS.patch_methods[suburl[0]](**args)
+                    if run == None:
+                        return "Not found", self.status_codes.http_404()
+                    return run, status
+            else:
+                return 'not allowed', self.status_codes.http_404(), 1
+        except Exception as err:
+            return err, self.status_codes.http_400()
 
     def url_paramters(self, params: str, function, request: str = ""):
         params = params.split("&")
@@ -314,8 +338,11 @@ class Server():
     def get_url(self, params):
         params = params[0].split("\n")
         url = params[0].split(" ")
-        suburl = url[1].split("/")
-        suburl = suburl[1:]
+        suburl = url[1][1:]
+        if "?" not in suburl:
+            suburl = [suburl, ""]
+        else:
+            suburl = suburl.split("?")
         return suburl
 
     # SE ENCARGA DE ENSAMBLAR LAS PETICIONES QUE CONSTAN DE MAS DE UN MENSAJE, LAS DE UN SOLO MENSAJE LAS PASA COMO LISTA
@@ -361,6 +388,7 @@ class Server():
 
     # MANEJADOR DE LAS PETICIONES
     def run(self):
+        self.swagger()
         self.__METHODS = self.router
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind((self.__HOST, self.__PORT))
