@@ -11,13 +11,13 @@ db = Database(host="localhost"
               , port=3306
               , database="fim"
               , username="root"
-              , password="Piedras123."
+              , password="piedras123"
               , db_type="mysql")
 
 gen = Generator(database=db)
-api.router.add_router(gen.build("reportes"))
 
-
+#gen.get_tables_metadata()
+api.router.add_router(gen.build("usuarios"))
 
 api.router.add_router(app.routes)
 

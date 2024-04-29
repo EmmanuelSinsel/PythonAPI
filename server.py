@@ -9,7 +9,7 @@ from multiprocessing.sharedctypes import Value
 import asyncio
 import time
 import sys
-from swagger_ui_bundle import swagger_ui_path
+#from swagger_ui_bundle import swagger_ui_path
 
 
 class Http_status:
@@ -55,40 +55,69 @@ class Http_status:
 class Router:
     prefix = None
     get_methods = {}
+    get_methods_meta = {}
     post_methods = {}
+    post_methods_meta = {}
     put_methods = {}
+    put_methods_meta = {}
     delete_methods = {}
+    delete_methods_meta = {}
     patch_methods = {}
+    patch_methods_meta = {}
     page_urls = {}
-
 
     def __init__(self, prefix=None):
         self.prefix = prefix
 
-    def add_get(self, function, url: str):
+    def __make_meta(self, function):
+        params = signature(function)
+        meta = []
+        for i in params.parameters:
+            meta.append({
+                "name":params.parameters[i].name,
+                "type":params.parameters[i].annotation
+            })
+        return meta
+
+    def add_get(self, function, url: str, meta: list = None):
+        if meta is None:
+            meta = self.__make_meta(function)
         if self.prefix:
             url = self.prefix+"/"+url
         self.get_methods[url] = function
+        self.get_methods_meta[url] = meta
 
-    def add_post(self, function, url: str):
+    def add_post(self, function, url: str, meta: list = None):
+        if meta is None:
+            meta = self.__make_meta(function)
         if self.prefix:
             url = self.prefix+"/"+url
         self.post_methods[url] = function
+        self.post_methods_meta[url] = meta
 
-    def add_put(self, function, url: str):
+    def add_put(self, function, url: str, meta: list = None):
+        if meta is None:
+            meta = self.__make_meta(function)
         if self.prefix:
             url = self.prefix+"/"+url
         self.put_methods[url] = function
+        self.put_methods_meta[url] = meta
 
-    def add_delete(self, function, url: str):
+    def add_delete(self, function, url: str, meta: list = None):
+        if meta is None:
+            meta = self.__make_meta(function)
         if self.prefix:
             url = self.prefix+"/"+url
         self.delete_methods[url] = function
+        self.delete_methods_meta[url] = meta
 
-    def add_patch(self, function, url: str):
+    def add_patch(self, function, url: str, meta: list = None):
+        if meta is None:
+            meta = self.__make_meta(function)
         if self.prefix:
             url = self.prefix+"/"+url
         self.patch_methods[url] = function
+        self.patch_methods_meta[url] = meta
 
     def add_page(self, url, file):
         if self.prefix:
@@ -105,7 +134,7 @@ class Router:
 
 class Server():
     __DOCS_URL = "docs"
-    __METHODS: object
+    __METHODS: Router
     __HOST = ""
     __PORT = 0
     __CHUNK_SIZE = 1024
@@ -123,9 +152,23 @@ class Server():
     request_types = ["POST", "GET", "PATCH", "DELETE", "PUT", "OPTIONS", "HEAD"]
     no_ssl = "PGDOH"
 
-    def __init__(self, HOST: str, PORT: int):
+    def __init__(self, HOST: str, PORT: int, ts: bool = False):
         self.__HOST = HOST
         self.__PORT = PORT
+        print("Initialized server on "+HOST+":"+str(PORT))
+        if ts == True:
+            print("ALBUMES DE LA TAYLOR SWISS:")
+            print("1 - Taylor Swift")
+            print("2 - Fearless")
+            print("3 - Speak Now ")
+            print("4 - Red")
+            print("5 - 1989")
+            print("6 - Reputation ")
+            print("7 - Lover")
+            print("8 - Folklore")
+            print("9 - Evermore")
+            print("10 - Midnights")
+            print("11 - The Tortured Poets Department")
 
     def swagger(self):
         spec_string = '{"openapi":"3.0.1","info":{"title":"python-swagger-ui test api","description":"python-swagger-ui test api","version":"1.0.0"},"servers":[{"url":"http://127.0.0.1:8989/api"}],"tags":[{"name":"default","description":"default tag"}],"paths":{"/hello/world":{"get":{"tags":["default"],"summary":"output hello world.","responses":{"200":{"description":"OK","content":{"application/text":{"schema":{"type":"object","example":"Hello World!!!"}}}}}}}},"components":{}}'
@@ -192,9 +235,9 @@ class Server():
             chunk = sock.recv(1024)
             chunks.append(chunk)
             msg_len = self.get_msg_len(chunk)
-            if msg_len != None:
+            if msg_len is not None:
                 msg_len = int(msg_len)
-                if len(chunk)==1024:
+                if len(chunk) == 1024:
                     while bytes_recd < msg_len:
                         chunk = sock.recv(min(msg_len - bytes_recd, self.__CHUNK_SIZE))  # LEE UN TROZO DE 2048 BYTES DEL MENSAJE
                         if not chunk:
@@ -205,11 +248,11 @@ class Server():
                             break
             recv_data = b"".join(chunks)         # SUMA TODOS LOS TROZOS EN UNA CADENA DE BYTES
 
-            if not msg_len == None:
+            if msg_len is not None:
                 if int(msg_len) > (self.MAX_REQUEST_SIZE*pow(1024,2)):
-                    body = {"Message":"Content Too Large",
-                            "Content-Lenght":msg_len,
-                            "Max-Content-Lenght":(MAX_REQUEST_SIZE*pow(1024,2))
+                    body = {"Message": "Content Too Large",
+                            "Content-Lenght": msg_len,
+                            "Max-Content-Lenght": (self.MAX_REQUEST_SIZE*pow(1024,2))
                             }
                     self.sender(sock, body, self.status_codes.http_413())
                     self.sel.unregister(sock)
@@ -222,7 +265,8 @@ class Server():
                 rtype, params = self.request_constructor(data_dict['addr'][1], raw)
                 if params != None:
                     suburl = self.get_url(params)
-                    if len(suburl[0]) > 1:
+                    print(suburl)
+                    if suburl[0] not in self.__METHODS.page_urls:
                         run, status = self.handle_request(rtype, suburl, params)
                         if status not in self.error_status:
                             print(rtype,"REQUEST ACCEPED FROM",data_dict['addr'],"- STATUS:",status[0].decode("utf-8"),status[1].decode("utf-8"))
@@ -257,8 +301,13 @@ class Server():
                 return open("docs.html").read(), self.status_codes.http_201(), 0
             if len(suburl[0]) > 1:
                 if rtype == "GET":
-                    args = self.url_paramters(suburl[1], self.__METHODS.get_methods[suburl[0]])
-                    run, status = self.__METHODS.get_methods[suburl[0]](**args)
+                    args = self.url_paramters(params=suburl[1],
+                                              function=self.__METHODS.get_methods[suburl[0]],
+                                              meta=self.__METHODS.get_methods_meta[suburl[0]])
+                    if args == None:
+                        run, status = self.__METHODS.get_methods[suburl[0]]()
+                    else:
+                        run, status = self.__METHODS.get_methods[suburl[0]](**args)
                     if run == None:
                         return "Not found", self.status_codes.http_404()
                     return run, status
@@ -270,13 +319,20 @@ class Server():
                     run, status = self.__METHODS.post_methods[suburl[0]](request)
                     return run, status
                 if rtype == "PUT":
-                    args = self.url_paramters(suburl[1], self.__METHODS.put_methods[suburl[0]], params[1])
-                    run, status = self.__METHODS.put_methods[suburl[0]](**args)
+                    params[1] = params[1].replace("\n", '')
+                    request = json.loads(params[1])
+                    args = self.url_paramters(params=suburl[1],
+                                              function=self.__METHODS.put_methods[suburl[0]],
+                                              request=params[1],
+                                              meta=self.__METHODS.put_methods_meta[suburl[0]])
+                    run, status = self.__METHODS.put_methods[suburl[0]](request, **args)
                     if run == None:
                         return "Not found", self.status_codes.http_404()
                     return run, status
                 if rtype == "DELETE":
-                    params = self.url_paramters(suburl[1], self.__METHODS.delete_methods[suburl[0]])
+                    params = self.url_paramters(params=suburl[1],
+                                                function=self.__METHODS.delete_methods[suburl[0]],
+                                                meta=self.__METHODS.delete_methods_meta[suburl[0]])
                     run, status = self.__METHODS.delete_methods[suburl[0]](**params)
                     if run == None:
                         return "Not found", self.status_codes.http_404()
@@ -286,53 +342,65 @@ class Server():
                 if rtype == "OPTIONS":
                     pass
                 if rtype == "PATCH":
-                    args = self.url_paramters(suburl[1], self.__METHODS.patch_methods[suburl[0]], params[1])
-                    run, status = self.__METHODS.patch_methods[suburl[0]](**args)
+                    params[1] = params[1].replace("\n", '')
+                    request = json.loads(params[1])
+                    args = self.url_paramters(params=suburl[1],
+                                              function=self.__METHODS.patch_methods[suburl[0]],
+                                              request=params[1],
+                                              meta=self.__METHODS.patch_methods_meta[suburl[0]])
+                    run, status = self.__METHODS.patch_methods[suburl[0]](request, **args)
                     if run == None:
                         return "Not found", self.status_codes.http_404()
                     return run, status
             else:
                 return 'not allowed', self.status_codes.http_404(), 1
         except Exception as err:
+            print("ERROR "+str(err))
             return err, self.status_codes.http_400()
 
-    def url_paramters(self, params: str, function, request: str = ""):
-        params = params.split("&")
-        for i in range(len(params)):
-            params[i] = params[i].split("=")
-        types = signature(function)
-        data = {}
-        for i in types.parameters:
-            temp = types.parameters[i].annotation
-            p = -1
-            for j in range(len(params)):
-                if params[j][0] == types.parameters[i].name:
-                    p = j
-                    break
-            if p == -1:
-                data[types.parameters[i].name] = json.loads(request)
-            if 'str' in str(temp):
-                params[p][1] = params[p][1].replace("'", '')
-                data[types.parameters[i].name] = str(params[p][1])
-            if 'int' in str(temp):
-                data[types.parameters[i].name] = int(params[p][1])
-            if 'float' in str(temp):
-                data[types.parameters[i].name] = float(params[p][1])
-            if 'bool' in str(temp):
-                data[types.parameters[i].name] = bool(params[p][1])
-            if 'list' in str(temp):
-                t = []
-            if 'tuple' in str(temp):
-                t = ()
-            if 'dict' in str(temp):
-                t = {}
-            if 'bytes' in str(temp):
-                t = b''
-            if 'inspect._empty' in str(temp):
-                params[p][1] = params[p][1].replace('"', '')
-                params[p][1] = params[p][1].replace("'", '')
-                data[types.parameters[i].name] = self.guess_type(params[p][1])
-        return data
+    def url_paramters(self, params: str, function, meta,  request: str = ""):
+        try:
+            method_params = params.split("&")
+            params = []
+            for i in range(len(method_params)):
+                temp = method_params[i].split("=")
+                params.append([meta[i]['name'], temp[1]])
+            data = {}
+            for arg in meta:
+                arg_name = str(arg['name'])
+                arg_type = str(arg['type'])
+                p = -1
+                for j in range(len(params)):
+                    if params[j][0] == arg_name:
+                        p = j
+                        break
+                if p == -1:
+                    data[arg_name] = json.loads(request)
+                if 'str' in arg_type:
+                    params[p][1] = params[p][1].replace("'", '')
+                    data[arg_name] = str(params[p][1])
+                if 'int' in arg_type:
+                    data[arg_name] = int(params[p][1])
+                if 'float' in arg_type:
+                    data[arg_name] = float(params[p][1])
+                if 'bool' in arg_type:
+                    data[arg_name] = bool(params[p][1])
+                if 'list' in arg_type:
+                    t = []
+                if 'tuple' in arg_type:
+                    t = ()
+                if 'dict' in arg_type:
+                    t = {}
+                if 'bytes' in arg_type:
+                    t = b''
+                if 'inspect._empty' in arg_type:
+                    params[p][1] = params[p][1].replace('"', '')
+                    params[p][1] = params[p][1].replace("'", '')
+                    data[arg_name] = self.guess_type(params[p][1])
+            return data
+        except Exception as err:
+            print(err)
+            return None
 
     # SE ENCARGA DE TOMAR LA URL DEL METODO QUE DEBE SER LLAMADO
     def get_url(self, params):
@@ -345,8 +413,10 @@ class Server():
             suburl = suburl.split("?")
         return suburl
 
-    # SE ENCARGA DE ENSAMBLAR LAS PETICIONES QUE CONSTAN DE MAS DE UN MENSAJE, LAS DE UN SOLO MENSAJE LAS PASA COMO LISTA
-    def request_constructor(self, port: str, raw: str):
+    # SE ENCARGA DE ENSAMBLAR LAS PETICIONES QUE CONSTAN DE MAS DE UN MENSAJE,
+    # LAS DE UN SOLO MENSAJE LAS PASA COMO LISTA
+
+    def request_constructor(self, port: str, raw: list):
         if "POST" in raw[0]:
             full_raw = [raw[0],raw[1]]
             return "POST", full_raw

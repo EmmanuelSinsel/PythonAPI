@@ -2,7 +2,7 @@ from server import Http_status, Request, Router
 
 status = Http_status()
 
-def test_get(a1: str):
+def test_get(a1: int):
     print(a1)
     return {"a1":a1}, status.http_200()
 
