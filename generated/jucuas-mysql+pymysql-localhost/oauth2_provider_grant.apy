@@ -1,0 +1,102 @@
+TABLE
+oauth2_provider_grant
+COLUMNS
+	id,BIGINT,True,True,False,None
+	code,VARCHAR(255),False,False,False,None
+	expires,DATETIME,False,False,False,None
+	redirect_uri,LONGTEXT,False,False,False,None
+	scope,LONGTEXT,False,False,False,None
+	application_id,BIGINT,False,False,True,oauth2_provider_application.id
+	user_id,BIGINT,False,False,True,accounts_user.id
+	created,DATETIME,False,False,False,None
+	updated,DATETIME,False,False,False,None
+	code_challenge,VARCHAR(128),False,False,False,None
+	code_challenge_method,VARCHAR(10),False,False,False,None
+	nonce,VARCHAR(255),False,False,False,None
+	claims,LONGTEXT,False,False,False,None
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,BIGINT
+		code,VARCHAR(255)
+		expires,DATETIME
+		redirect_uri,LONGTEXT
+		scope,LONGTEXT
+		application_id,BIGINT
+		user_id,BIGINT
+		created,DATETIME
+		updated,DATETIME
+		code_challenge,VARCHAR(128)
+		code_challenge_method,VARCHAR(10)
+		nonce,VARCHAR(255)
+		claims,LONGTEXT
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		code,VARCHAR(255)
+		expires,DATETIME
+		redirect_uri,LONGTEXT
+		scope,LONGTEXT
+		application_id,BIGINT
+		user_id,BIGINT
+		created,DATETIME
+		updated,DATETIME
+		code_challenge,VARCHAR(128)
+		code_challenge_method,VARCHAR(10)
+		nonce,VARCHAR(255)
+		claims,LONGTEXT
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		code,VARCHAR(255)
+		expires,DATETIME
+		redirect_uri,LONGTEXT
+		scope,LONGTEXT
+		application_id,BIGINT
+		user_id,BIGINT
+		created,DATETIME
+		updated,DATETIME
+		code_challenge,VARCHAR(128)
+		code_challenge_method,VARCHAR(10)
+		nonce,VARCHAR(255)
+		claims,LONGTEXT
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		code,VARCHAR(255)
+	JSON
+	RETURN
+		PATCHED,200
+	END

@@ -1,0 +1,106 @@
+TABLE
+reviewer_reviewer
+COLUMNS
+	id,BIGINT,True,True,False,None
+	first_name,VARCHAR(50),False,False,False,None
+	last_name,VARCHAR(50),False,False,False,None
+	user_name,VARCHAR(50),False,False,False,None
+	email,VARCHAR(50),False,False,False,None
+	is_active,TINYINT,False,False,False,None
+	status,TINYINT,False,False,False,None
+	user_id,BIGINT,False,False,True,accounts_user.id
+	origin_organizational_unit_id,BIGINT,False,False,True,university_organizationalunit.id
+	origin_university_id,BIGINT,False,False,True,university_university.id
+	global_reviewer,TINYINT,False,False,False,None
+	region,VARCHAR(2),False,False,False,None
+	origin_highschool_id,BIGINT,False,False,True,university_university.id
+	reviewer_permission,VARCHAR(10),False,False,False,None
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,BIGINT
+		first_name,VARCHAR(50)
+		last_name,VARCHAR(50)
+		user_name,VARCHAR(50)
+		email,VARCHAR(50)
+		is_active,TINYINT
+		status,TINYINT
+		user_id,BIGINT
+		origin_organizational_unit_id,BIGINT
+		origin_university_id,BIGINT
+		global_reviewer,TINYINT
+		region,VARCHAR(2)
+		origin_highschool_id,BIGINT
+		reviewer_permission,VARCHAR(10)
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		first_name,VARCHAR(50)
+		last_name,VARCHAR(50)
+		user_name,VARCHAR(50)
+		email,VARCHAR(50)
+		is_active,TINYINT
+		status,TINYINT
+		user_id,BIGINT
+		origin_organizational_unit_id,BIGINT
+		origin_university_id,BIGINT
+		global_reviewer,TINYINT
+		region,VARCHAR(2)
+		origin_highschool_id,BIGINT
+		reviewer_permission,VARCHAR(10)
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		first_name,VARCHAR(50)
+		last_name,VARCHAR(50)
+		user_name,VARCHAR(50)
+		email,VARCHAR(50)
+		is_active,TINYINT
+		status,TINYINT
+		user_id,BIGINT
+		origin_organizational_unit_id,BIGINT
+		origin_university_id,BIGINT
+		global_reviewer,TINYINT
+		region,VARCHAR(2)
+		origin_highschool_id,BIGINT
+		reviewer_permission,VARCHAR(10)
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		first_name,VARCHAR(50)
+	JSON
+	RETURN
+		PATCHED,200
+	END

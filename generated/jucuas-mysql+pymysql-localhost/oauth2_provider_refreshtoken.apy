@@ -1,0 +1,82 @@
+TABLE
+oauth2_provider_refreshtoken
+COLUMNS
+	id,BIGINT,True,True,False,None
+	token,VARCHAR(255),False,False,False,None
+	access_token_id,BIGINT,False,False,True,oauth2_provider_accesstoken.id
+	application_id,BIGINT,False,False,True,oauth2_provider_application.id
+	user_id,BIGINT,False,False,True,accounts_user.id
+	created,DATETIME,False,False,False,None
+	updated,DATETIME,False,False,False,None
+	revoked,DATETIME,False,False,False,None
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,BIGINT
+		token,VARCHAR(255)
+		access_token_id,BIGINT
+		application_id,BIGINT
+		user_id,BIGINT
+		created,DATETIME
+		updated,DATETIME
+		revoked,DATETIME
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		token,VARCHAR(255)
+		access_token_id,BIGINT
+		application_id,BIGINT
+		user_id,BIGINT
+		created,DATETIME
+		updated,DATETIME
+		revoked,DATETIME
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		token,VARCHAR(255)
+		access_token_id,BIGINT
+		application_id,BIGINT
+		user_id,BIGINT
+		created,DATETIME
+		updated,DATETIME
+		revoked,DATETIME
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		token,VARCHAR(255)
+	JSON
+	RETURN
+		PATCHED,200
+	END

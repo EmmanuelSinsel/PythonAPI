@@ -1,0 +1,70 @@
+TABLE
+accounts_tokens
+COLUMNS
+	id,BIGINT,True,True,False,None
+	token,VARCHAR(6),False,False,False,None
+	created_at,DATETIME,False,False,False,None
+	expired,TINYINT,False,False,False,None
+	user_id,BIGINT,False,False,True,accounts_user.id
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,BIGINT
+		token,VARCHAR(6)
+		created_at,DATETIME
+		expired,TINYINT
+		user_id,BIGINT
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		token,VARCHAR(6)
+		created_at,DATETIME
+		expired,TINYINT
+		user_id,BIGINT
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		token,VARCHAR(6)
+		created_at,DATETIME
+		expired,TINYINT
+		user_id,BIGINT
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		token,VARCHAR(6)
+	JSON
+	RETURN
+		PATCHED,200
+	END

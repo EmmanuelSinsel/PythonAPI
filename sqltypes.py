@@ -33,7 +33,9 @@ sqltypes = {
     "UUID": UUID,
     "VARBINARY": VARBINARY,
     "VARCHAR": VARCHAR,
-    "LONGBLOB": LargeBinary
+    "LONGBLOB": LargeBinary,
+    "TINYINT": INTEGER,
+    "LONGTEXT": TEXT
 }
 
 mapped_sqltypes = {
@@ -64,5 +66,7 @@ mapped_sqltypes = {
     "UUID": str,
     "VARBINARY": str,
     "VARCHAR": str,
-    "LONGBLOB": str
+    "LONGBLOB": str,
+    "TINYINT": int,
+    "LONGTEXT": str
 }

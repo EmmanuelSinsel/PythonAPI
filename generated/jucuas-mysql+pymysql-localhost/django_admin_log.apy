@@ -1,0 +1,82 @@
+TABLE
+django_admin_log
+COLUMNS
+	id,INTEGER,True,True,False,None
+	action_time,DATETIME,False,False,False,None
+	object_id,LONGTEXT,False,False,False,None
+	object_repr,VARCHAR(200),False,False,False,None
+	action_flag,SMALLINT,False,False,False,None
+	change_message,LONGTEXT,False,False,False,None
+	content_type_id,INTEGER,False,False,True,django_content_type.id
+	user_id,BIGINT,False,False,True,accounts_user.id
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,INTEGER
+		action_time,DATETIME
+		object_id,LONGTEXT
+		object_repr,VARCHAR(200)
+		action_flag,SMALLINT
+		change_message,LONGTEXT
+		content_type_id,INTEGER
+		user_id,BIGINT
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		action_time,DATETIME
+		object_id,LONGTEXT
+		object_repr,VARCHAR(200)
+		action_flag,SMALLINT
+		change_message,LONGTEXT
+		content_type_id,INTEGER
+		user_id,BIGINT
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		action_time,DATETIME
+		object_id,LONGTEXT
+		object_repr,VARCHAR(200)
+		action_flag,SMALLINT
+		change_message,LONGTEXT
+		content_type_id,INTEGER
+		user_id,BIGINT
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		action_time,DATETIME
+	JSON
+	RETURN
+		PATCHED,200
+	END

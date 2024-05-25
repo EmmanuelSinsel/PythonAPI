@@ -1,0 +1,62 @@
+TABLE
+activity_typeactivity_type_evidence
+COLUMNS
+	id,BIGINT,True,True,False,None
+	typeactivity_id,BIGINT,False,False,True,activity_typeactivity.id
+	typeevidence_id,BIGINT,False,False,True,activity_typeevidence.id
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,BIGINT
+		typeactivity_id,BIGINT
+		typeevidence_id,BIGINT
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		typeactivity_id,BIGINT
+		typeevidence_id,BIGINT
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		typeactivity_id,BIGINT
+		typeevidence_id,BIGINT
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		typeactivity_id,BIGINT
+	JSON
+	RETURN
+		PATCHED,200
+	END

@@ -1,0 +1,106 @@
+TABLE
+deadline_deadline
+COLUMNS
+	id,BIGINT,True,True,False,None
+	date_edition,VARCHAR(4),False,False,False,None
+	date_to_upload_activities,DATE,False,False,False,None
+	date_to_upload_evidence,DATE,False,False,False,None
+	date_to_validate_evidence,DATE,False,False,False,None
+	date_edition_start,DATE,False,False,False,None
+	end_date_of_the_edition,DATE,False,False,False,None
+	name_edition,VARCHAR(150),False,False,False,None
+	is_active,TINYINT,False,False,False,None
+	status,TINYINT,False,False,False,None
+	file,LONGTEXT,False,False,False,None
+	file_name,VARCHAR(150),False,False,False,None
+	file_confilcto,LONGTEXT,False,False,False,None
+	file_name_conflic,VARCHAR(150),False,False,False,None
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,BIGINT
+		date_edition,VARCHAR(4)
+		date_to_upload_activities,DATE
+		date_to_upload_evidence,DATE
+		date_to_validate_evidence,DATE
+		date_edition_start,DATE
+		end_date_of_the_edition,DATE
+		name_edition,VARCHAR(150)
+		is_active,TINYINT
+		status,TINYINT
+		file,LONGTEXT
+		file_name,VARCHAR(150)
+		file_confilcto,LONGTEXT
+		file_name_conflic,VARCHAR(150)
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		date_edition,VARCHAR(4)
+		date_to_upload_activities,DATE
+		date_to_upload_evidence,DATE
+		date_to_validate_evidence,DATE
+		date_edition_start,DATE
+		end_date_of_the_edition,DATE
+		name_edition,VARCHAR(150)
+		is_active,TINYINT
+		status,TINYINT
+		file,LONGTEXT
+		file_name,VARCHAR(150)
+		file_confilcto,LONGTEXT
+		file_name_conflic,VARCHAR(150)
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		date_edition,VARCHAR(4)
+		date_to_upload_activities,DATE
+		date_to_upload_evidence,DATE
+		date_to_validate_evidence,DATE
+		date_edition_start,DATE
+		end_date_of_the_edition,DATE
+		name_edition,VARCHAR(150)
+		is_active,TINYINT
+		status,TINYINT
+		file,LONGTEXT
+		file_name,VARCHAR(150)
+		file_confilcto,LONGTEXT
+		file_name_conflic,VARCHAR(150)
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		date_edition,VARCHAR(4)
+	JSON
+	RETURN
+		PATCHED,200
+	END

@@ -1,0 +1,64 @@
+TABLE
+django_session
+COLUMNS
+	session_key,VARCHAR(40),True,False,False,None
+	session_data,LONGTEXT,False,False,False,None
+	expire_date,DATETIME,False,False,False,None
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		session_key,INTEGER
+	JSON
+	RETURN
+		session_key,VARCHAR(40)
+		session_data,LONGTEXT
+		expire_date,DATETIME
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		session_key,VARCHAR(40)
+		session_data,LONGTEXT
+		expire_date,DATETIME
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		session_key,INTEGER
+	JSON
+		session_key,VARCHAR(40)
+		session_data,LONGTEXT
+		expire_date,DATETIME
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		session_key,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		session_key,INTEGER
+		session_data,LONGTEXT
+	JSON
+	RETURN
+		PATCHED,200
+	END

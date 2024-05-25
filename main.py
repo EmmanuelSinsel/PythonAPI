@@ -4,8 +4,7 @@ from generator import Database, Generator
 
 status = Http_status()
 
-api = Server(HOST="127.0.0.1", PORT=4201)
-api.MAX_REQUEST_SIZE = 30
+api = Server(HOST="127.0.0.1", PORT=4201, SHOW_URLS=False)
 
 db = Database(host="localhost"
               , port=3306
@@ -14,13 +13,13 @@ db = Database(host="localhost"
               , password="piedras123"
               , db_type="mysql")
 
-gen = Generator(database=db)
+gen = Generator()
 
-#gen.get_tables_metadata()
-api.router.add_router(gen.build("usuarios"))
+api.router.add_router(gen.build_all(database=db,
+                                    prefix="local",
+                                    ask_for_tables=False,
+                                    ask_for_methods=False))
 
 api.router.add_router(app.routes)
-
-api.router.add_page("tavio", "docs.html")
 
 api.run()

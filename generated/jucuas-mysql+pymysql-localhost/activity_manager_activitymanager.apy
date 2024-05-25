@@ -1,0 +1,90 @@
+TABLE
+activity_manager_activitymanager
+COLUMNS
+	id,BIGINT,True,True,False,None
+	first_name,VARCHAR(50),False,False,False,None
+	last_name,VARCHAR(50),False,False,False,None
+	gender,VARCHAR(1),False,False,False,None
+	email,VARCHAR(50),False,False,False,None
+	birth_date,DATETIME,False,False,False,None
+	is_active,TINYINT,False,False,False,None
+	status,TINYINT,False,False,False,None
+	academic_degree,VARCHAR(1),False,False,False,None
+	user_id,BIGINT,False,False,True,accounts_user.id
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,BIGINT
+		first_name,VARCHAR(50)
+		last_name,VARCHAR(50)
+		gender,VARCHAR(1)
+		email,VARCHAR(50)
+		birth_date,DATETIME
+		is_active,TINYINT
+		status,TINYINT
+		academic_degree,VARCHAR(1)
+		user_id,BIGINT
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		first_name,VARCHAR(50)
+		last_name,VARCHAR(50)
+		gender,VARCHAR(1)
+		email,VARCHAR(50)
+		birth_date,DATETIME
+		is_active,TINYINT
+		status,TINYINT
+		academic_degree,VARCHAR(1)
+		user_id,BIGINT
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		first_name,VARCHAR(50)
+		last_name,VARCHAR(50)
+		gender,VARCHAR(1)
+		email,VARCHAR(50)
+		birth_date,DATETIME
+		is_active,TINYINT
+		status,TINYINT
+		academic_degree,VARCHAR(1)
+		user_id,BIGINT
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		first_name,VARCHAR(50)
+	JSON
+	RETURN
+		PATCHED,200
+	END

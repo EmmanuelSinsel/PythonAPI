@@ -1,0 +1,94 @@
+TABLE
+activity_evidence
+COLUMNS
+	id,BIGINT,True,True,False,None
+	name,VARCHAR(300),False,False,False,None
+	evidence_file,VARCHAR(100),False,False,False,None
+	activity_id,BIGINT,False,False,True,activity_activity.id
+	type_evidence_id,BIGINT,False,False,True,activity_typeevidence.id
+	created,DATETIME,False,False,False,None
+	modified,DATETIME,False,False,False,None
+	evidence_status,VARCHAR(6),False,False,False,None
+	created_by_id,BIGINT,False,False,True,accounts_user.id
+	observation,VARCHAR(1500),False,False,False,None
+	status_changed_by_id,BIGINT,False,False,True,accounts_user.id
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,BIGINT
+		name,VARCHAR(300)
+		evidence_file,VARCHAR(100)
+		activity_id,BIGINT
+		type_evidence_id,BIGINT
+		created,DATETIME
+		modified,DATETIME
+		evidence_status,VARCHAR(6)
+		created_by_id,BIGINT
+		observation,VARCHAR(1500)
+		status_changed_by_id,BIGINT
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		name,VARCHAR(300)
+		evidence_file,VARCHAR(100)
+		activity_id,BIGINT
+		type_evidence_id,BIGINT
+		created,DATETIME
+		modified,DATETIME
+		evidence_status,VARCHAR(6)
+		created_by_id,BIGINT
+		observation,VARCHAR(1500)
+		status_changed_by_id,BIGINT
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		name,VARCHAR(300)
+		evidence_file,VARCHAR(100)
+		activity_id,BIGINT
+		type_evidence_id,BIGINT
+		created,DATETIME
+		modified,DATETIME
+		evidence_status,VARCHAR(6)
+		created_by_id,BIGINT
+		observation,VARCHAR(1500)
+		status_changed_by_id,BIGINT
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		name,VARCHAR(300)
+	JSON
+	RETURN
+		PATCHED,200
+	END

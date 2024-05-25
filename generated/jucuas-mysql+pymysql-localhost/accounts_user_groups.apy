@@ -1,0 +1,62 @@
+TABLE
+accounts_user_groups
+COLUMNS
+	id,BIGINT,True,True,False,None
+	user_id,BIGINT,False,False,True,accounts_user.id
+	group_id,INTEGER,False,False,True,auth_group.id
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,BIGINT
+		user_id,BIGINT
+		group_id,INTEGER
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		user_id,BIGINT
+		group_id,INTEGER
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		user_id,BIGINT
+		group_id,INTEGER
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		user_id,BIGINT
+	JSON
+	RETURN
+		PATCHED,200
+	END

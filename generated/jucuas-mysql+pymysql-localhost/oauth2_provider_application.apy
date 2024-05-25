@@ -1,0 +1,98 @@
+TABLE
+oauth2_provider_application
+COLUMNS
+	id,BIGINT,True,True,False,None
+	client_id,VARCHAR(100),False,False,False,None
+	redirect_uris,LONGTEXT,False,False,False,None
+	client_type,VARCHAR(32),False,False,False,None
+	authorization_grant_type,VARCHAR(32),False,False,False,None
+	client_secret,VARCHAR(255),False,False,False,None
+	name,VARCHAR(255),False,False,False,None
+	user_id,BIGINT,False,False,True,accounts_user.id
+	skip_authorization,TINYINT,False,False,False,None
+	created,DATETIME,False,False,False,None
+	updated,DATETIME,False,False,False,None
+	algorithm,VARCHAR(5),False,False,False,None
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,BIGINT
+		client_id,VARCHAR(100)
+		redirect_uris,LONGTEXT
+		client_type,VARCHAR(32)
+		authorization_grant_type,VARCHAR(32)
+		client_secret,VARCHAR(255)
+		name,VARCHAR(255)
+		user_id,BIGINT
+		skip_authorization,TINYINT
+		created,DATETIME
+		updated,DATETIME
+		algorithm,VARCHAR(5)
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		client_id,VARCHAR(100)
+		redirect_uris,LONGTEXT
+		client_type,VARCHAR(32)
+		authorization_grant_type,VARCHAR(32)
+		client_secret,VARCHAR(255)
+		name,VARCHAR(255)
+		user_id,BIGINT
+		skip_authorization,TINYINT
+		created,DATETIME
+		updated,DATETIME
+		algorithm,VARCHAR(5)
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		client_id,VARCHAR(100)
+		redirect_uris,LONGTEXT
+		client_type,VARCHAR(32)
+		authorization_grant_type,VARCHAR(32)
+		client_secret,VARCHAR(255)
+		name,VARCHAR(255)
+		user_id,BIGINT
+		skip_authorization,TINYINT
+		created,DATETIME
+		updated,DATETIME
+		algorithm,VARCHAR(5)
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		client_id,VARCHAR(100)
+	JSON
+	RETURN
+		PATCHED,200
+	END

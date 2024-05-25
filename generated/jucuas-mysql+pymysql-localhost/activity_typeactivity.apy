@@ -1,0 +1,74 @@
+TABLE
+activity_typeactivity
+COLUMNS
+	id,BIGINT,True,True,False,None
+	name,VARCHAR(300),False,False,False,None
+	is_active,TINYINT,False,False,False,None
+	status,TINYINT,False,False,False,None
+	title,VARCHAR(800),False,False,False,None
+	maxCopresenter,VARCHAR(100),False,False,False,None
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,BIGINT
+		name,VARCHAR(300)
+		is_active,TINYINT
+		status,TINYINT
+		title,VARCHAR(800)
+		maxCopresenter,VARCHAR(100)
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		name,VARCHAR(300)
+		is_active,TINYINT
+		status,TINYINT
+		title,VARCHAR(800)
+		maxCopresenter,VARCHAR(100)
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		name,VARCHAR(300)
+		is_active,TINYINT
+		status,TINYINT
+		title,VARCHAR(800)
+		maxCopresenter,VARCHAR(100)
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		name,VARCHAR(300)
+	JSON
+	RETURN
+		PATCHED,200
+	END

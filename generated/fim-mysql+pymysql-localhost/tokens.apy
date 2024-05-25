@@ -1,0 +1,74 @@
+TABLE
+tokens
+COLUMNS
+	id_tokens,INTEGER,True,True,False,None
+	id_usuario,INTEGER,False,False,False,None
+	token,VARCHAR(45),False,False,False,None
+	token_type,VARCHAR(3),False,False,False,None
+	expiration,DATE,False,False,False,None
+	expirated,INTEGER,False,False,False,None
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id_tokens,INTEGER
+	JSON
+	RETURN
+		id_tokens,INTEGER
+		id_usuario,INTEGER
+		token,VARCHAR(45)
+		token_type,VARCHAR(3)
+		expiration,DATE
+		expirated,INTEGER
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		id_usuario,INTEGER
+		token,VARCHAR(45)
+		token_type,VARCHAR(3)
+		expiration,DATE
+		expirated,INTEGER
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id_tokens,INTEGER
+	JSON
+		id_usuario,INTEGER
+		token,VARCHAR(45)
+		token_type,VARCHAR(3)
+		expiration,DATE
+		expirated,INTEGER
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id_tokens,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id_tokens,INTEGER
+		id_usuario,INTEGER
+	JSON
+	RETURN
+		PATCHED,200
+	END

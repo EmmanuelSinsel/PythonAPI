@@ -1,0 +1,130 @@
+TABLE
+activity_activity
+COLUMNS
+	id,BIGINT,True,True,False,None
+	name,VARCHAR(300),False,False,False,None
+	is_active,TINYINT,False,False,False,None
+	status,TINYINT,False,False,False,None
+	type_id,BIGINT,False,False,True,activity_typeactivity.id
+	area_knowledge,VARCHAR(6),False,False,False,None
+	date_activity,DATETIME,False,False,False,None
+	description,VARCHAR(500),False,False,False,None
+	educational_level_to_is_directed,VARCHAR(6),False,False,False,None
+	modality,VARCHAR(1),False,False,False,None
+	numbers_expected_attendees,INTEGER,False,False,False,None
+	numbers_total_attendees,INTEGER,False,False,False,None
+	presenter_id,BIGINT,False,False,False,None
+	created,DATETIME,False,False,False,None
+	modified,DATETIME,False,False,False,None
+	created_by_id,BIGINT,False,False,True,accounts_user.id
+	type_of_public,VARCHAR(6),False,False,False,None
+	activity_status,VARCHAR(6),False,False,False,None
+	certificate_file,VARCHAR(100),False,False,False,None
+	edition_id,BIGINT,False,False,True,deadline_deadline.id
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,BIGINT
+		name,VARCHAR(300)
+		is_active,TINYINT
+		status,TINYINT
+		type_id,BIGINT
+		area_knowledge,VARCHAR(6)
+		date_activity,DATETIME
+		description,VARCHAR(500)
+		educational_level_to_is_directed,VARCHAR(6)
+		modality,VARCHAR(1)
+		numbers_expected_attendees,INTEGER
+		numbers_total_attendees,INTEGER
+		presenter_id,BIGINT
+		created,DATETIME
+		modified,DATETIME
+		created_by_id,BIGINT
+		type_of_public,VARCHAR(6)
+		activity_status,VARCHAR(6)
+		certificate_file,VARCHAR(100)
+		edition_id,BIGINT
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		name,VARCHAR(300)
+		is_active,TINYINT
+		status,TINYINT
+		type_id,BIGINT
+		area_knowledge,VARCHAR(6)
+		date_activity,DATETIME
+		description,VARCHAR(500)
+		educational_level_to_is_directed,VARCHAR(6)
+		modality,VARCHAR(1)
+		numbers_expected_attendees,INTEGER
+		numbers_total_attendees,INTEGER
+		presenter_id,BIGINT
+		created,DATETIME
+		modified,DATETIME
+		created_by_id,BIGINT
+		type_of_public,VARCHAR(6)
+		activity_status,VARCHAR(6)
+		certificate_file,VARCHAR(100)
+		edition_id,BIGINT
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		name,VARCHAR(300)
+		is_active,TINYINT
+		status,TINYINT
+		type_id,BIGINT
+		area_knowledge,VARCHAR(6)
+		date_activity,DATETIME
+		description,VARCHAR(500)
+		educational_level_to_is_directed,VARCHAR(6)
+		modality,VARCHAR(1)
+		numbers_expected_attendees,INTEGER
+		numbers_total_attendees,INTEGER
+		presenter_id,BIGINT
+		created,DATETIME
+		modified,DATETIME
+		created_by_id,BIGINT
+		type_of_public,VARCHAR(6)
+		activity_status,VARCHAR(6)
+		certificate_file,VARCHAR(100)
+		edition_id,BIGINT
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		name,VARCHAR(300)
+	JSON
+	RETURN
+		PATCHED,200
+	END

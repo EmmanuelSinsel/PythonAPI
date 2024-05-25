@@ -1,0 +1,66 @@
+TABLE
+auth_permission
+COLUMNS
+	id,INTEGER,True,True,False,None
+	name,VARCHAR(255),False,False,False,None
+	content_type_id,INTEGER,False,False,True,django_content_type.id
+	codename,VARCHAR(100),False,False,False,None
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,INTEGER
+		name,VARCHAR(255)
+		content_type_id,INTEGER
+		codename,VARCHAR(100)
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		name,VARCHAR(255)
+		content_type_id,INTEGER
+		codename,VARCHAR(100)
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		name,VARCHAR(255)
+		content_type_id,INTEGER
+		codename,VARCHAR(100)
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		name,VARCHAR(255)
+	JSON
+	RETURN
+		PATCHED,200
+	END

@@ -1,0 +1,94 @@
+TABLE
+reportes
+COLUMNS
+	ID_report,INTEGER,True,True,False,None
+	nomReport,VARCHAR(45),False,False,False,None
+	descripcion,VARCHAR(45),False,False,False,None
+	fecha_report,DATE,False,False,False,None
+	evidencia,LONGBLOB,False,False,False,None
+	autor,INTEGER,False,False,True,usuarios.ID_user
+	estatus,CHAR(30),False,False,False,None
+	urgencia,INTEGER,False,False,False,None
+	privacidad,INTEGER,False,False,False,None
+	tipo_report,CHAR(30),False,False,False,None
+	reponsable,INTEGER,False,False,False,None
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		ID_report,INTEGER
+	JSON
+	RETURN
+		ID_report,INTEGER
+		nomReport,VARCHAR(45)
+		descripcion,VARCHAR(45)
+		fecha_report,DATE
+		evidencia,LONGBLOB
+		autor,INTEGER
+		estatus,CHAR(30)
+		urgencia,INTEGER
+		privacidad,INTEGER
+		tipo_report,CHAR(30)
+		reponsable,INTEGER
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		nomReport,VARCHAR(45)
+		descripcion,VARCHAR(45)
+		fecha_report,DATE
+		evidencia,LONGBLOB
+		autor,INTEGER
+		estatus,CHAR(30)
+		urgencia,INTEGER
+		privacidad,INTEGER
+		tipo_report,CHAR(30)
+		reponsable,INTEGER
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		ID_report,INTEGER
+	JSON
+		nomReport,VARCHAR(45)
+		descripcion,VARCHAR(45)
+		fecha_report,DATE
+		evidencia,LONGBLOB
+		autor,INTEGER
+		estatus,CHAR(30)
+		urgencia,INTEGER
+		privacidad,INTEGER
+		tipo_report,CHAR(30)
+		reponsable,INTEGER
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		ID_report,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		ID_report,INTEGER
+		nomReport,VARCHAR(45)
+	JSON
+	RETURN
+		PATCHED,200
+	END

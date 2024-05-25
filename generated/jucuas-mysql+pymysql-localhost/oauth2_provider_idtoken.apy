@@ -1,0 +1,82 @@
+TABLE
+oauth2_provider_idtoken
+COLUMNS
+	id,BIGINT,True,True,False,None
+	jti,CHAR(32),False,False,False,None
+	expires,DATETIME,False,False,False,None
+	scope,LONGTEXT,False,False,False,None
+	created,DATETIME,False,False,False,None
+	updated,DATETIME,False,False,False,None
+	application_id,BIGINT,False,False,True,oauth2_provider_application.id
+	user_id,BIGINT,False,False,True,accounts_user.id
+BEGIN
+	GET
+	NAME
+		get
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		id,BIGINT
+		jti,CHAR(32)
+		expires,DATETIME
+		scope,LONGTEXT
+		created,DATETIME
+		updated,DATETIME
+		application_id,BIGINT
+		user_id,BIGINT
+END
+BEGIN
+	POST
+	NAME
+		create
+	RECIEVE
+	JSON
+		jti,CHAR(32)
+		expires,DATETIME
+		scope,LONGTEXT
+		created,DATETIME
+		updated,DATETIME
+		application_id,BIGINT
+		user_id,BIGINT
+	RETURN
+		CREATED,201
+END
+BEGIN
+	PUT
+	NAME
+		update
+	RECIEVE
+		id,INTEGER
+	JSON
+		jti,CHAR(32)
+		expires,DATETIME
+		scope,LONGTEXT
+		created,DATETIME
+		updated,DATETIME
+		application_id,BIGINT
+		user_id,BIGINT
+	RETURN
+		UPDATED,200
+END
+BEGIN
+	DELETE
+	NAME
+		delete
+	RECIEVE
+		id,INTEGER
+	JSON
+	RETURN
+		DELETED,200
+END
+BEGIN
+	PATCH
+	NAME
+		patch
+	RECIEVE
+		id,INTEGER
+		jti,CHAR(32)
+	JSON
+	RETURN
+		PATCHED,200
+	END
