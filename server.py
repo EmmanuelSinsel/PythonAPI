@@ -79,7 +79,6 @@ class Router:
         self.prefix = prefix
 
     def swagger_generator(self, method_type: str, metadata, url: str, table: str, fields: list = [],):
-        print("SWAGGER")
         if self.prefix:
             url = self.prefix + "/" + url
         swagger_method = {
@@ -173,7 +172,9 @@ class Router:
         return meta
 
     def add_get(self, function, url: str, meta: dict = None):
-        table = meta['table']
+        table = None
+        if meta:
+            table = meta['table']
         rel_url = url
         if meta is None:
             meta = self.__make_meta(function, "GET")
@@ -184,7 +185,9 @@ class Router:
         self.swagger_generator(method_type="GET", metadata=meta, url=rel_url, table=table)
 
     def add_post(self, function, url: str, meta: dict = None):
-        table = meta['table']
+        table = None
+        if meta:
+            table = meta['table']
         rel_url = url
         if meta is None:
             meta = self.__make_meta(function, "POST")
@@ -195,7 +198,9 @@ class Router:
         self.swagger_generator(method_type="POST", metadata=meta, url=rel_url, table=table)
 
     def add_put(self, function, url: str, meta: dict = None):
-        table = meta['table']
+        table = None
+        if meta:
+            table = meta['table']
         rel_url = url
         if meta is None:
             meta = self.__make_meta(function, "PUT")
@@ -206,7 +211,9 @@ class Router:
         self.swagger_generator(method_type="PUT", metadata=meta, url=rel_url, table=table)
 
     def add_delete(self, function, url: str, meta: dict = None):
-        table = meta['table']
+        table = None
+        if meta:
+            table = meta['table']
         rel_url = url
         if meta is None:
             meta = self.__make_meta(function, "DELETE")
@@ -217,7 +224,9 @@ class Router:
         self.swagger_generator(method_type="DELETE", metadata=meta, url=rel_url, table=table)
 
     def add_patch(self, function, url: str, meta: dict = None):
-        table = meta['table']
+        table = None
+        if meta:
+            table = meta['table']
         rel_url = url
         if meta is None:
             meta = self.__make_meta(function, "PATCH")
@@ -325,6 +334,7 @@ class Server():
             s.send(b'\n\n')
             s.send(bytes(body, 'utf-8'))
         except Exception as err:
+            print("SENDER HTML ERROR")
             print(err)
 
     # ACCEPTA LAS CONEXIONES A LOS SOCKETS
@@ -399,7 +409,7 @@ class Server():
                     rtype, params = self.request_constructor(data_dict['addr'][1], raw)
                     if params != None:
                         suburl = self.get_url(params)
-                        if suburl[0] not in self.__METHODS.page_urls:
+                        if suburl[0] not in self.__METHODS.page_urls and not os.path.isfile("htdocs/" + suburl[0]):
                             run, status = self.handle_request(rtype, suburl, params)
                             if run == "OPTIONS":
                                 print(rtype, "REQUEST ACCEPED FROM", data_dict['addr'], "- STATUS:",
@@ -415,12 +425,16 @@ class Server():
                         else:
                             url = suburl[0]
                             if os.path.isfile("htdocs/" + url):
-                                print("SI")
                                 content = open("htdocs/" + url).read()
                                 self.senderHtml(sock, content, self.status_codes.http_201())
                             elif url in self.router.page_urls:
-                                print("ASDSD")
-                                content = open("htdocs/" + self.router.page_urls[url]).read()
+                                content = None
+                                if url == "favicon.ico":
+                                    #content = open("htdocs/" + self.router.page_urls[url], encoding="utf-8").read()
+                                    with open("htdocs/" + self.router.page_urls[url], 'rb') as file:
+                                        content = file.read()
+                                else:
+                                    content = open("htdocs/" + self.router.page_urls[url]).read()
                                 self.senderHtml(sock, content, self.status_codes.http_201())
                             else:
                                 self.senderHtml(sock, '', self.status_codes.http_404())
@@ -430,7 +444,7 @@ class Server():
                 if recv_data:
                     data.outb += recv_data
         except Exception as err:
-            print(err)
+            print("CONNECTION ERROR:"+ str(err))
 
     def handle_request_html(self, suburl):
         try:
@@ -446,7 +460,10 @@ class Server():
             rtype = "OPTIONS"
         try:
             if suburl[0] == self.__DOCS_URL:
-                return open("docs.html").read(), self.status_codes.http_201(), 0
+                return open(suburl[0]).read(), self.status_codes.http_201(), 0
+            if os.path.isfile("htdocs/" + suburl[0]):
+                return open("htdocs/" + suburl[0]).read(), self.status_codes.http_201(), 0
+            # AGREGAR CAPACIDAD PARA INCLUIR CUALQUIER HTML
             if len(suburl[0]) > 1:
                 if rtype == "GET":
                     args = self.url_paramters(params=suburl[1],
@@ -493,10 +510,8 @@ class Server():
                     status = self.status_codes.http_200()
                     return run, status
                 if rtype == "PATCH":
-                    print("PATCH")
                     params[1] = params[1].replace("\n", '')
                     request = json.loads(params[1])
-                    print(request)
                     args = self.url_paramters(params=suburl[1],
                                               function=self.__METHODS.patch_methods[suburl[0]],
                                               request=params[1],
@@ -624,7 +639,7 @@ class Server():
             self.__METHODS = self.router
             self.__METHODS.add_page(url="swagger", file="swagger.html")
             self.__METHODS.add_page(url="swagger_json", file="swagger.json")
-            # self.__METHODS.add_page(url="favicon.ico", file="favicon.png")
+            self.__METHODS.add_page(url="favicon.ico", file="favicon.png")
             swagger = Swagger()
             swagger_json = swagger.generate_swagger(api_details=self.__METHODS.api_details,
                                                     host=self.__HOST,
