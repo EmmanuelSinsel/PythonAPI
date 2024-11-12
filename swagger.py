@@ -20,12 +20,14 @@ class Swagger:
         }
 
         for api in api_details:
+            formated_table_name = str(api['table']).replace("_", " ").capitalize()
             path = api['path']
             method = api['method'].lower()
             if path not in swagger_template['paths']:
                 swagger_template['paths'][path] = {}
             swagger_template['paths'][path][method] = {
                 "summary": api['summary'],
+                "tags": [formated_table_name],
                 "parameters": [
                     {
                         "name": param['name'],

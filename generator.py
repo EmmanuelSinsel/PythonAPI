@@ -154,6 +154,7 @@ class Generator:
             from sqlalchemy import inspect
             inspector = inspect(engine)
             schemas = inspector.get_table_names()
+            counter = 0
             methods = Router()
             if self.__debug:
                 print("Using host: " + engine.url.host)
@@ -323,26 +324,6 @@ class Methods:
                                          type_=sqltypes[i['type']],
                                          )
                                   )
-                    # if "VARCHAR" in i['type'] and i['type'][0] == "V":
-                    #     new_column = (Column(i['column'],
-                    #                          sqltypes[i['type']],
-                    #                          )
-                    #                   )
-                    # elif "NVARCHAR" in i['type'] and i['type'][0] == "N":
-                    #     new_column = (Column(i['column'],
-                    #                          sqltypes['NVARCHAR'],
-                    #                          ),
-                    #                   )
-                    # elif "CHAR" in i['type'] and i['type'][0] == "C":
-                    #     new_column = (Column(i['column'],
-                    #                          sqltypes['CHAR'],
-                    #                          )
-                    #                   )
-                    # else:
-                    #     new_column = (Column(i['column'],
-                    #                          sqltypes[i['type']],
-                    #                          )
-                    #                   )
                 attributes.append(new_column)
             return Table(*attributes), attributes[2:]
         except Exception as err:
@@ -471,35 +452,35 @@ class Methods:
         for method in methods_data:
             if method['method_type'] == 'GET':
                 get = self.make_get(method=method, table_id=table_id, db=db, table_obj=table_obj, fields=fields)
-                meta = self.make_meta(method_data=method)
+                meta = self.make_meta(method_data=method, table_obj=table_obj)
                 self.generated.add_get(function=get,
                                        url=method['method_name'],
                                        meta=meta)
 
             if method['method_type'] == 'POST':
                 post = self.make_post(method=method, db=db, table_obj=table_obj)
-                meta = self.make_meta(method_data=method)
+                meta = self.make_meta(method_data=method, table_obj=table_obj)
                 self.generated.add_post(function=post,
                                         url=method['method_name'],
                                         meta=meta)
 
             if method['method_type'] == 'PUT':
                 put = self.make_put(method=method, table_id=table_id, db=db, table_obj=table_obj)
-                meta = self.make_meta(method_data=method)
+                meta = self.make_meta(method_data=method, table_obj=table_obj)
                 self.generated.add_put(function=put,
                                        url=method['method_name'],
                                        meta=meta)
 
             if method['method_type'] == 'DELETE':
                 delete = self.make_delete(method=method, table_id=table_id, db=db, table_obj=table_obj)
-                meta = self.make_meta(method_data=method)
+                meta = self.make_meta(method_data=method, table_obj=table_obj)
                 self.generated.add_delete(function=delete,
                                           url=method['method_name'],
                                           meta=meta)
 
             if method['method_type'] == 'PATCH':
                 patch = self.make_patch(method=method, table_id=table_id, db=db, table_obj=table_obj)
-                meta = self.make_meta(method_data=method)
+                meta = self.make_meta(method_data=method, table_obj=table_obj)
                 self.generated.add_patch(function=patch,
                                          url=method['method_name'],
                                          meta=meta)
@@ -546,8 +527,6 @@ class Methods:
                 for fk in fields:
                     if fk['fk'] == "True":
                         temp_fk = str(fk['fk_field'].split("."))
-
-                        # fk_data[fk['column']] = self.extend_foreign_key(temp_fk[0], temp_fk[1])
                 data = []
                 for row in res:
                     temp = {}
@@ -568,7 +547,6 @@ class Methods:
                 return data, self.__status.http_200()
             except Exception as err:
                 return {"status": err}, self.__status.http_400()
-
         return get
 
     def make_post(self, method, db, table_obj):
@@ -628,11 +606,10 @@ class Methods:
 
         return patch
 
-    def make_meta(self, method_data):
+    def make_meta(self, method_data, table_obj):
         meta_recieve = []
         meta_json = []
         meta_returns = []
-
         for arg in method_data["method_recieve"]:
             arg_data = arg.split(',')
             arg_type = arg_data[1].split("(")
@@ -642,7 +619,6 @@ class Methods:
                 "name": arg_data[0],
                 "type": mapped_sqltypes[arg_type]
             })
-
         for arg in method_data["method_json"]:
             arg_data = arg.split(',')
             arg_type = arg_data[1].split("(")
@@ -652,11 +628,11 @@ class Methods:
                 "name": arg_data[0],
                 "type": mapped_sqltypes[arg_type]
             })
-
         meta = {
             "recieve": meta_recieve,
             "json": meta_json,
-            "return": meta_returns
+            "return": meta_returns,
+            "table": table_obj
         }
         return meta
 
