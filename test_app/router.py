@@ -1,6 +1,3 @@
-import test_app.methods as app
-from server import Router
-
 # routes = Router()
 #
 # routes.add_get(function=app.test_get, url="test_get")

@@ -2,17 +2,10 @@ import json
 import os.path
 import socket
 import selectors
-import threading
 import types
 from inspect import signature
-from multiprocessing.sharedctypes import Value
-import asyncio
-import time
-import sys
-from swagger import Swagger
 
-
-# from swagger_ui_bundle import swagger_ui_path
+from APY.server.swagger import Swagger
 
 
 class Http_status:
@@ -79,7 +72,6 @@ class Router:
         self.prefix = prefix
 
     def swagger_generator(self, method_type: str, metadata, url: str, table: str, fields: list = [],):
-        print("SWAGGER")
         if self.prefix:
             url = self.prefix + "/" + url
         swagger_method = {
@@ -414,13 +406,11 @@ class Server():
                                       status[0].decode("utf-8"), "ERROR -", run)
                         else:
                             url = suburl[0]
-                            if os.path.isfile("htdocs/" + url):
-                                print("SI")
-                                content = open("htdocs/" + url).read()
+                            if os.path.isfile("APY/server/htdocs/" + url):
+                                content = open("APY/server/htdocs/" + url).read()
                                 self.senderHtml(sock, content, self.status_codes.http_201())
                             elif url in self.router.page_urls:
-                                print("ASDSD")
-                                content = open("htdocs/" + self.router.page_urls[url]).read()
+                                content = open("APY/server/htdocs/" + self.router.page_urls[url]).read()
                                 self.senderHtml(sock, content, self.status_codes.http_201())
                             else:
                                 self.senderHtml(sock, '', self.status_codes.http_404())
@@ -493,10 +483,8 @@ class Server():
                     status = self.status_codes.http_200()
                     return run, status
                 if rtype == "PATCH":
-                    print("PATCH")
                     params[1] = params[1].replace("\n", '')
                     request = json.loads(params[1])
-                    print(request)
                     args = self.url_paramters(params=suburl[1],
                                               function=self.__METHODS.patch_methods[suburl[0]],
                                               request=params[1],
@@ -629,7 +617,7 @@ class Server():
             swagger_json = swagger.generate_swagger(api_details=self.__METHODS.api_details,
                                                     host=self.__HOST,
                                                     port=self.__PORT)
-            with open('htdocs/swagger.json', 'w') as f:
+            with open('APY/server/htdocs/swagger.json', 'w') as f:
                 f.write(swagger_json)
             if self.__SHOW_URLS:
                 for g in self.__METHODS.get_methods.keys():
@@ -645,7 +633,6 @@ class Server():
                 total = (len(self.__METHODS.get_methods) + len(self.__METHODS.post_methods)
                          + len(self.__METHODS.put_methods) + len(self.__METHODS.delete_methods)
                          + len(self.__METHODS.patch_methods))
-                print(str(total)+" GENERATED METHODS")
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.bind((self.__HOST, self.__PORT))
                 s.listen()

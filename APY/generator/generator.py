@@ -4,26 +4,19 @@ import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Table, Column, MetaData
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import text
-from sqlalchemy.schema import ForeignKey
 import logging
 
 logging.disable(logging.WARNING)
 
-from server import Router
-from server import Http_status, Request
+from APY.server.server import Router
+from APY.server.server import Http_status
 
 status = Http_status()
 
-from sqltypes import sqltypes, mapped_sqltypes
+from APY.generator.sqltypes import sqltypes, mapped_sqltypes
 
-import json
 import os
-import re
-import copy
-
 
 class Database:
     __host = ""
@@ -34,6 +27,8 @@ class Database:
     __db_type = ""
     __params = None
     __engine = None
+
+
 
     def __init__(self, host, port, database, username, password, db_type):
         self.__host = host
@@ -89,6 +84,7 @@ class Database:
 
 
 class Generator:
+    __root_folder = './APY/generator/generator'
     __debug: bool = False
 
     def __init__(self, debug: bool = False):
@@ -102,7 +98,7 @@ class Generator:
                 md = sqlalchemy.MetaData()
                 self.check_generated(table=table, engine=engine)
                 db_folder = engine.url.database + "-" + engine.url.drivername + "-" + engine.url.host
-                f = open("./generated/" + db_folder + "/" + table + ".apy", "r")
+                f = open(self.__root_folder + db_folder + "/" + table + ".apy", "r")
                 columns = None
                 autoincrement = True
                 if f.read() == '':
@@ -111,7 +107,8 @@ class Generator:
                                   table=table,
                                   fields=columns,
                                   prefix=prefix,
-                                  ask_for_methods=ask_for_methods)
+                                  ask_for_methods=ask_for_methods,
+                                  root_folder=self.__root_folder)
                 if self.__debug:
                     print("Succesful")
                 return methods.generated
@@ -145,9 +142,9 @@ class Generator:
         if engine and database:
             first_time = False
             db_folder = engine.url.database + "-" + engine.url.drivername + "-" + engine.url.host
-            if not os.path.exists("./generated/" + db_folder):
+            if not os.path.exists(self.__root_folder + db_folder):
                 first_time = True
-            if ask_for_tables is None and not os.path.exists("./generated/" + db_folder):
+            if ask_for_tables is None and not os.path.exists(self.__root_folder + + db_folder):
                 ask_for_tables = self.check_ask_for_tables()
             if ask_for_methods is None and ask_for_tables == True:
                 ask_for_methods = self.check_ask_for_methods()
@@ -161,7 +158,7 @@ class Generator:
                 print("Generating pack of methods for database: " + engine.url.database)
             for table in schemas:
                 if ask_for_tables:
-                    if not os.path.exists("./generated/" + db_folder + "/" + table + ".apy") and ask_for_tables:
+                    if not os.path.exists(self.__root_folder + db_folder + "/" + table + ".apy") and ask_for_tables:
                         print("Do you want include the table '" + table + "' in the generator? (y-yes, n-no) > ",
                               end="")
                         answer = input()
@@ -173,7 +170,7 @@ class Generator:
                                                           prefix=prefix,
                                                           ask_for_methods=ask_for_methods))
                 else:
-                    if os.path.exists("./generated/" + db_folder + "/" + table + ".apy") or first_time:
+                    if os.path.exists(self.__root_folder + db_folder + "/" + table + ".apy") or first_time:
                         methods.add_router(self.build(table=table,
                                                       database=database,
                                                       prefix=prefix,
@@ -212,12 +209,12 @@ class Generator:
 
     def check_generated(self, table: str, engine: Database.engine):
         db_folder = engine.url.database + "-" + engine.url.drivername + "-" + engine.url.host
-        if not os.path.exists("./generated"):
-            os.mkdir("./generated")
-        if not os.path.exists("./generated/" + db_folder):
-            os.mkdir("./generated/" + db_folder)
-        if not os.path.exists("./generated/" + db_folder + "/" + table + ".apy"):
-            f = open("./generated/" + db_folder + "/" + table + ".apy", "x")
+        if not os.path.exists(self.__root_folder):
+            os.mkdir(self.__root_folder)
+        if not os.path.exists(self.__root_folder + db_folder):
+            os.mkdir(self.__root_folder + db_folder)
+        if not os.path.exists(self.__root_folder + db_folder + "/" + table + ".apy"):
+            f = open(self.__root_folder + db_folder + "/" + table + ".apy", "x")
             f.close()
 
 
@@ -226,8 +223,10 @@ class Methods:
     __status = Http_status()
     __md = None
     __engine = None
+    __root_folder = None
 
-    def __init__(self, database: Database, table: str, fields: list, prefix: str, ask_for_methods: bool):
+    def __init__(self, database: Database, table: str, fields: list, prefix: str, ask_for_methods: bool, root_folder: str):
+        self.__root_folder = root_folder
         self.__md = sqlalchemy.MetaData()
         self.__engine = database.engine()
         table_id = None
@@ -342,11 +341,11 @@ class Methods:
 
     def read_api_files(self, table_id, table, columns, engine, ask_for_methods):
         db_folder = engine.url.database + "-" + engine.url.drivername + "-" + engine.url.host
-        f = open("./generated/" + db_folder + "/" + table + ".apy", "r")
+        f = open(self.__root_folder + db_folder + "/" + table + ".apy", "r")
         ask_response = None
         if f.read() == '':
             f.close()
-            fw = open("./generated/" + db_folder + "/" + table + ".apy", "a")
+            fw = open(self.__root_folder + db_folder + "/" + table + ".apy", "a")
             # DATOS DE LA TABLA
             fw.write("TABLE\n")
             fw.write(table + "\n")
@@ -443,7 +442,7 @@ class Methods:
                 fw.write("\t\t" + "PATCHED,200" + "\n")
                 fw.write("\t" + "END" + "\n")
             fw.close()
-        f = open("./generated/" + db_folder + "/" + table + ".apy", "r")
+        f = open(self.__root_folder + db_folder + "/" + table + ".apy", "r")
         method_data = f.read()
         f.close()
         return method_data
