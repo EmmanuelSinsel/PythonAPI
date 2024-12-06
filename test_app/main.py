@@ -19,7 +19,11 @@ api.router.add_router(gen.build_all(database=db,
                                     ask_for_tables=False,
                                     ask_for_methods=False))
 
-#api.router.add_router(app.routes)
+def test(a: int):
+    return a, status.http_200()
+
+
+api.router.add_get(function=test, url="test")
 
 
 api.run()

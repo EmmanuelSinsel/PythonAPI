@@ -165,7 +165,9 @@ class Router:
         return meta
 
     def add_get(self, function, url: str, meta: dict = None):
-        table = meta['table']
+        table = None
+        if meta:
+            table = meta['table']
         rel_url = url
         if meta is None:
             meta = self.__make_meta(function, "GET")
@@ -176,7 +178,9 @@ class Router:
         self.swagger_generator(method_type="GET", metadata=meta, url=rel_url, table=table)
 
     def add_post(self, function, url: str, meta: dict = None):
-        table = meta['table']
+        table = None
+        if meta:
+            table = meta['table']
         rel_url = url
         if meta is None:
             meta = self.__make_meta(function, "POST")
@@ -187,7 +191,9 @@ class Router:
         self.swagger_generator(method_type="POST", metadata=meta, url=rel_url, table=table)
 
     def add_put(self, function, url: str, meta: dict = None):
-        table = meta['table']
+        table = None
+        if meta:
+            table = meta['table']
         rel_url = url
         if meta is None:
             meta = self.__make_meta(function, "PUT")
@@ -198,7 +204,9 @@ class Router:
         self.swagger_generator(method_type="PUT", metadata=meta, url=rel_url, table=table)
 
     def add_delete(self, function, url: str, meta: dict = None):
-        table = meta['table']
+        table = None
+        if meta:
+            table = meta['table']
         rel_url = url
         if meta is None:
             meta = self.__make_meta(function, "DELETE")
@@ -209,7 +217,9 @@ class Router:
         self.swagger_generator(method_type="DELETE", metadata=meta, url=rel_url, table=table)
 
     def add_patch(self, function, url: str, meta: dict = None):
-        table = meta['table']
+        table = None
+        if meta:
+            table = meta['table']
         rel_url = url
         if meta is None:
             meta = self.__make_meta(function, "PATCH")
@@ -420,7 +430,7 @@ class Server():
                 if recv_data:
                     data.outb += recv_data
         except Exception as err:
-            print(err)
+            print("CONNECTION ERROR:",err)
 
     def handle_request_html(self, suburl):
         try:
@@ -496,7 +506,7 @@ class Server():
             else:
                 return 'not allowed', self.status_codes.http_404(), 1
         except Exception as err:
-            print("ERROR " + str(err))
+            print("HANDLER ERROR:" + str(err))
             return err, self.status_codes.http_400()
 
     def url_paramters(self, params: str, function, meta, request: str = ""):
